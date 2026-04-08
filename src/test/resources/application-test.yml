@@ -1,0 +1,15 @@
+spring:
+  cloud:
+    aws:
+      endpoint: http://localhost:4566
+      region:
+        static: us-east-1
+      credentials:
+        access-key: test
+        secret-key: test
+
+app:
+  messaging:
+    enabled: true
+    sns-topic-arn: arn:aws:sns:us-east-1:000000000000:supplier-recommendation-events
+    cns-feedback-queue-name: cns-recommendation-feedback
