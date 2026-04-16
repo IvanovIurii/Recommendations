@@ -7,9 +7,27 @@ spring:
       credentials:
         access-key: test
         secret-key: test
+  datasource:
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 1
 
 app:
+  api-client:
+    recommendations-api:
+      url: http://localhost:${wiremock.server.port}/recommendations
+  recommendations:
+    queue-processing-delay-ms: 200
+    notification-processing-delay-ms: 200
+    queue-batch-size: 10
+    queue-max-processing-attempts: 3
   messaging:
     enabled: true
     sns-topic-arn: arn:aws:sns:us-east-1:000000000000:supplier-recommendation-events
     cns-feedback-queue-name: cns-recommendation-feedback
+
+management:
+  statsd:
+    metrics:
+      export:
+        enabled: false

@@ -3,6 +3,7 @@ package com.hse.recommendationsystem.infrastructure.repository
 import com.hse.recommendationsystem.domain.model.NotificationStatus
 import com.hse.recommendationsystem.domain.model.RecommendationNotification
 import com.hse.recommendationsystem.domain.repository.RecommendationNotificationRepository
+import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
@@ -38,6 +39,19 @@ class RecommendationNotificationRepositoryImpl(
         return notification.copy(id = id)
     }
 
+    override fun listOnWait(limit: Int): List<RecommendationNotification> =
+        namedParameterJdbcTemplate.query(
+            """
+            SELECT id, rfq_id, supplier_id, unified_supplier_id, status, created_at, modified_at
+            FROM recommendations_notifications
+            WHERE status = 'ON_WAIT'
+            ORDER BY id ASC
+            LIMIT :limit
+            """.trimIndent(),
+            MapSqlParameterSource().addValue("limit", limit),
+            ROW_MAPPER,
+        )
+
     override fun updateStatusIfCurrent(
         notificationId: Long,
         expectedCurrent: NotificationStatus,
@@ -56,4 +70,19 @@ class RecommendationNotificationRepositoryImpl(
                 .addValue("newStatus", newStatus.name)
                 .addValue("modifiedAt", java.sql.Timestamp.from(modifiedAt)),
         )
+
+    private companion object {
+        private val ROW_MAPPER =
+            RowMapper { rs, _ ->
+                RecommendationNotification(
+                    id = rs.getLong("id"),
+                    rfqId = rs.getObject("rfq_id", java.util.UUID::class.java),
+                    supplierId = rs.getObject("supplier_id", java.util.UUID::class.java),
+                    unifiedSupplierId = rs.getObject("unified_supplier_id", java.util.UUID::class.java),
+                    status = NotificationStatus.valueOf(rs.getString("status")),
+                    createdAt = rs.getTimestamp("created_at").toInstant(),
+                    modifiedAt = rs.getTimestamp("modified_at")?.toInstant(),
+                )
+            }
+    }
 }

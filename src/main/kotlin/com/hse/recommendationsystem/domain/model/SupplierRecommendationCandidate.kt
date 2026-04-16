@@ -1,5 +1,6 @@
 package com.hse.recommendationsystem.domain.model
 
+import com.fasterxml.jackson.databind.JsonNode
 import java.util.UUID
 
 data class SupplierRecommendationCandidate(
@@ -21,4 +22,5 @@ data class SupplierRecommendationCandidate(
     val products: List<String>,
     val keywords: List<String>,
     val productCategories: List<String>,
+    val rawRecommendationJson: JsonNode? = null,
 )

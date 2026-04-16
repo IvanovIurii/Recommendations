@@ -1,11 +1,9 @@
 package com.hse.recommendationsystem.domain.service
 
 import com.hse.recommendationsystem.domain.model.RfqCore
-import com.hse.recommendationsystem.domain.model.RfqRecommendationQueueType
 import com.hse.recommendationsystem.domain.model.RfqStatus
 import com.hse.recommendationsystem.domain.model.RfqUser
 import com.hse.recommendationsystem.domain.repository.RfqCoreRepository
-import com.hse.recommendationsystem.domain.repository.RfqRecommendationsQueueRepository
 import com.hse.recommendationsystem.domain.repository.RfqUserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -16,7 +14,7 @@ import java.util.UUID
 class RfqService(
     private val rfqUserRepository: RfqUserRepository,
     private val rfqCoreRepository: RfqCoreRepository,
-    private val rfqRecommendationsQueueRepository: RfqRecommendationsQueueRepository,
+    private val recommendationService: RecommendationService,
 ) {
     @Transactional
     fun createRfq(
@@ -32,7 +30,6 @@ class RfqService(
         buyerCountry: String?,
         categoryId: Long?,
     ): RfqCore {
-        // todo: better use clock
         val now = Instant.now()
         val user =
             rfqUserRepository.save(
@@ -73,7 +70,7 @@ class RfqService(
             error("RFQ cannot be accepted from status ${rfq.status}")
         }
         rfqCoreRepository.updateStatus(rfqId, RfqStatus.ACCEPTED)
-        rfqRecommendationsQueueRepository.enqueue(rfqId, RfqRecommendationQueueType.CUSTOMER)
+        recommendationService.initiateRecommendationsTasks(rfqId)
     }
 
     @Transactional(readOnly = true)

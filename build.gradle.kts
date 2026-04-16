@@ -56,7 +56,7 @@ dependencies {
     testImplementation("org.awaitility:awaitility:4.2.0")
     testImplementation("software.amazon.awssdk:sns")
     testImplementation("software.amazon.awssdk:sqs")
-    testImplementation("org.wiremock:wiremock-standalone:3.12.1")
+    testImplementation("org.springframework.cloud:spring-cloud-starter-contract-stub-runner:4.3.0")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
@@ -71,6 +71,7 @@ kotlin {
 
 tasks.withType<Test> {
     maxHeapSize = "2g"
+    maxParallelForks = 1
     useJUnitPlatform()
     testLogging.events =
         setOf(

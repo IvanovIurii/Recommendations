@@ -25,13 +25,17 @@ server:
   port: 8080
 
 app:
+  api-client:
+    recommendations-api:
+      url: ${RECOMMENDATIONS_API_URL:http://localhost:8081/recommendations}
   recommendations:
     queue-processing-delay-ms: 1000
     queue-batch-size: 10
     queue-max-processing-attempts: 3
+    notification-processing-delay-ms: 60000
   messaging:
     enabled: true
-    sns-topic-arn: ""
+    sns-topic-arn: ${SNS_TOPIC_ARN:arn:aws:sns:us-east-1:000000000000:supplier-recommendation-events}
     cns-feedback-queue-name: cns-feedback-queue
 
 springdoc:

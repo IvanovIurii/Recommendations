@@ -2,16 +2,19 @@ package com.hse.recommendationsystem.domain.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.hse.recommendationsystem.domain.model.DecisionType
+import com.hse.recommendationsystem.domain.model.RecommendedSupplierWithFlagsDto
 import com.hse.recommendationsystem.domain.model.RfqCore
 import com.hse.recommendationsystem.domain.model.RfqStatus
 import com.hse.recommendationsystem.domain.model.SupplierDecision
+import com.hse.recommendationsystem.domain.model.SupplierRecommendations
+import com.hse.recommendationsystem.domain.messaging.SupplierRecommendationNotificationPublisher
 import com.hse.recommendationsystem.domain.repository.DecisionRepository
 import com.hse.recommendationsystem.domain.repository.RecommendationNotificationRepository
-import com.hse.recommendationsystem.domain.messaging.SupplierRecommendationNotificationPublisher
 import com.hse.recommendationsystem.domain.repository.RecommendationRepository
 import com.hse.recommendationsystem.domain.repository.RfqCoreRepository
+import com.hse.recommendationsystem.domain.repository.RfqRecommendationsQueueRepository
+import com.hse.recommendationsystem.domain.repository.RfqUserRepository
 import com.hse.recommendationsystem.domain.repository.SupplierProfileSnapshotRepository
-import com.hse.recommendationsystem.domain.service.stubs.MockRecommendationEngine
 import com.hse.recommendationsystem.infrastructure.config.MessagingProperties
 import io.mockk.every
 import io.mockk.mockk
@@ -28,14 +31,22 @@ import java.util.UUID
 
 class RecommendationServiceTest {
     private val clock: Clock = Clock.fixed(Instant.parse("2024-07-01T09:00:00Z"), ZoneOffset.UTC)
-    private val engine = MockRecommendationEngine()
+    private val recommendationsServiceClient = mockk<RecommendationsServiceClient>()
+    private val objectMapper = ObjectMapper().findAndRegisterModules()
+    private val recommendationsServiceSupport = RecommendationsServiceSupport(objectMapper)
     private val recommendationRepository = mockk<RecommendationRepository>(relaxed = true)
     private val supplierProfileSnapshotRepository = mockk<SupplierProfileSnapshotRepository>(relaxed = true)
     private val recommendationNotificationRepository = mockk<RecommendationNotificationRepository>(relaxed = true)
     private val rfqCoreRepository = mockk<RfqCoreRepository>(relaxed = true)
+    private val rfqUserRepository = mockk<RfqUserRepository>(relaxed = true)
+    private val rfqRecommendationsQueueRepository = mockk<RfqRecommendationsQueueRepository>(relaxed = true)
     private val decisionRepository = mockk<DecisionRepository>(relaxed = true)
-    private val objectMapper = ObjectMapper().findAndRegisterModules()
-    private val messagingProperties = MessagingProperties(enabled = false, snsTopicArn = "supplier-recommendation-events", cnsFeedbackQueueName = "cns-recommendation-feedback")
+    private val messagingProperties =
+        MessagingProperties(
+            enabled = false,
+            snsTopicArn = "arn:aws:sns:us-east-1:000000000000:supplier-recommendation-events",
+            cnsFeedbackQueueName = "cns-recommendation-feedback",
+        )
     private val noopPublisher = SupplierRecommendationNotificationPublisher { }
 
     private lateinit var recommendationService: RecommendationService
@@ -47,13 +58,43 @@ class RecommendationServiceTest {
             notificationSeq++
             firstArg<com.hse.recommendationsystem.domain.model.RecommendationNotification>().copy(id = notificationSeq)
         }
+        every { recommendationsServiceClient.getRecommendations(any()) } answers {
+            SupplierRecommendations(
+                supplierWithFlags =
+                    (1..8).map { i ->
+                        RecommendedSupplierWithFlagsDto(
+                            supplierId = UUID.fromString("a1000000-0000-4000-8000-${String.format("%012d", i)}"),
+                            matchType = "match",
+                            customerInNeed = true,
+                            isCustomer = true,
+                            modelVersion = "v1",
+                            unifiedSupplierId = null,
+                            name = "Supplier $i",
+                            website = "https://example.com",
+                            profileUrl = "https://example.com/p",
+                            country = "DE",
+                            distributionArea = "EU",
+                            description = "Desc",
+                            descriptionDe = null,
+                            descriptionEn = "Desc",
+                            supplierTypes = listOf("Manufacturer"),
+                            products = listOf("P"),
+                            keywords = listOf("k"),
+                            productCategories = listOf("C"),
+                        )
+                    },
+            )
+        }
         recommendationService =
             RecommendationService(
-                recommendationEngine = engine,
+                recommendationsServiceClient = recommendationsServiceClient,
+                recommendationsServiceSupport = recommendationsServiceSupport,
                 recommendationRepository = recommendationRepository,
                 supplierProfileSnapshotRepository = supplierProfileSnapshotRepository,
                 recommendationNotificationRepository = recommendationNotificationRepository,
                 rfqCoreRepository = rfqCoreRepository,
+                rfqUserRepository = rfqUserRepository,
+                rfqRecommendationsQueueRepository = rfqRecommendationsQueueRepository,
                 decisionRepository = decisionRepository,
                 objectMapper = objectMapper,
                 messagingProperties = messagingProperties,
@@ -62,7 +103,7 @@ class RecommendationServiceTest {
     }
 
     @Test
-    fun `processRecommendationsForRfq persists rows and marks PROCESSED`() {
+    fun `findAndStoreRecommendations persists rows and marks PROCESSED`() {
         val rfqId = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd")
         val rfq =
             RfqCore(
@@ -80,8 +121,9 @@ class RecommendationServiceTest {
                 updatedAt = clock.instant(),
             )
         every { rfqCoreRepository.findById(rfqId) } returns rfq
+        every { rfqUserRepository.findById(1L) } returns null
 
-        recommendationService.processRecommendationsForRfq(rfqId)
+        recommendationService.findAndStoreRecommendations(rfqId)
 
         verify { recommendationRepository.deleteAllDataForRfq(rfqId) }
         verify(exactly = 8) { recommendationRepository.save(any()) }
@@ -91,7 +133,7 @@ class RecommendationServiceTest {
     }
 
     @Test
-    fun `processRecommendationsForRfq skips when RFQ not ACCEPTED`() {
+    fun `findAndStoreRecommendations skips when RFQ not ACCEPTED`() {
         val rfqId = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee")
         val rfq =
             RfqCore(
@@ -110,7 +152,7 @@ class RecommendationServiceTest {
             )
         every { rfqCoreRepository.findById(rfqId) } returns rfq
 
-        recommendationService.processRecommendationsForRfq(rfqId)
+        recommendationService.findAndStoreRecommendations(rfqId)
 
         verify(exactly = 0) { recommendationRepository.deleteAllDataForRfq(any()) }
         verify(exactly = 0) { recommendationRepository.save(any()) }

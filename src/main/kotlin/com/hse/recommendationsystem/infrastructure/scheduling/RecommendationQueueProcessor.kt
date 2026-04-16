@@ -5,7 +5,6 @@ import com.hse.recommendationsystem.domain.repository.RfqRecommendationsQueueRep
 import com.hse.recommendationsystem.domain.service.RecommendationService
 import com.hse.recommendationsystem.infrastructure.config.RecommendationsProperties
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
@@ -14,17 +13,15 @@ class RecommendationQueueProcessor(
     private val recommendationService: RecommendationService,
     private val recommendationsProperties: RecommendationsProperties,
 ) {
-    @Scheduled(fixedDelayString = "\${app.recommendations.queue-processing-delay-ms:1000}")
-    fun processRecommendationsQueue() {
+    fun processBatch() {
         val batch = rfqRecommendationsQueueRepository.pollOldest(recommendationsProperties.queueBatchSize)
         if (batch.isEmpty()) return
 
         for (entry in batch) {
             try {
-                // todo: refactor; everyone is a customer in this sample
                 when (entry.queueType) {
                     RfqRecommendationQueueType.CUSTOMER ->
-                        recommendationService.processRecommendationsForRfq(entry.rfqId)
+                        recommendationService.findAndStoreRecommendations(entry.rfqId)
                 }
                 rfqRecommendationsQueueRepository.deleteById(entry.id)
             } catch (e: Exception) {

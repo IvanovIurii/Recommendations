@@ -22,12 +22,16 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.jdbc.Sql
 import java.time.Instant
 import java.util.UUID
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
+@AutoConfigureWireMock(port = 0)
+@Sql(scripts = ["classpath:clean.sql"])
 class RecommendationRepositoryIntegrationTest {
     @Autowired
     private lateinit var rfqUserRepository: RfqUserRepository

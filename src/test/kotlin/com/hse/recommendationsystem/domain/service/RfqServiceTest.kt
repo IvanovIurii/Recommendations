@@ -1,11 +1,9 @@
 package com.hse.recommendationsystem.domain.service
 
 import com.hse.recommendationsystem.domain.model.RfqCore
-import com.hse.recommendationsystem.domain.model.RfqRecommendationQueueType
 import com.hse.recommendationsystem.domain.model.RfqStatus
 import com.hse.recommendationsystem.domain.model.RfqUser
 import com.hse.recommendationsystem.domain.repository.RfqCoreRepository
-import com.hse.recommendationsystem.domain.repository.RfqRecommendationsQueueRepository
 import com.hse.recommendationsystem.domain.repository.RfqUserRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -23,7 +21,7 @@ class RfqServiceTest {
     private val clock: Clock = Clock.fixed(Instant.parse("2024-06-01T12:00:00Z"), ZoneOffset.UTC)
     private val rfqUserRepository = mockk<RfqUserRepository>()
     private val rfqCoreRepository = mockk<RfqCoreRepository>()
-    private val queueRepository = mockk<RfqRecommendationsQueueRepository>(relaxUnitFun = true)
+    private val recommendationService = mockk<RecommendationService>(relaxUnitFun = true)
 
     private lateinit var rfqService: RfqService
 
@@ -33,7 +31,7 @@ class RfqServiceTest {
             RfqService(
                 rfqUserRepository = rfqUserRepository,
                 rfqCoreRepository = rfqCoreRepository,
-                rfqRecommendationsQueueRepository = queueRepository,
+                recommendationService = recommendationService,
             )
     }
 
@@ -63,11 +61,11 @@ class RfqServiceTest {
         assertThat(rfq.senderId).isEqualTo(99L)
         verify(exactly = 1) { rfqUserRepository.save(any()) }
         verify(exactly = 1) { rfqCoreRepository.save(any()) }
-        verify(exactly = 0) { queueRepository.enqueue(any(), any()) }
+        verify(exactly = 0) { recommendationService.initiateRecommendationsTasks(any()) }
     }
 
     @Test
-    fun `acceptRfq updates status and enqueues customer recommendations`() {
+    fun `acceptRfq updates status and initiates recommendation tasks`() {
         val rfqId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
         val rfq =
             RfqCore(
@@ -90,7 +88,7 @@ class RfqServiceTest {
         rfqService.acceptRfq(rfqId)
 
         verify { rfqCoreRepository.updateStatus(rfqId, RfqStatus.ACCEPTED) }
-        verify { queueRepository.enqueue(rfqId, RfqRecommendationQueueType.CUSTOMER) }
+        verify { recommendationService.initiateRecommendationsTasks(rfqId) }
     }
 
     @Test
@@ -114,6 +112,6 @@ class RfqServiceTest {
         every { rfqCoreRepository.findById(rfqId) } returns rfq
 
         assertThrows<IllegalStateException> { rfqService.acceptRfq(rfqId) }
-        verify(exactly = 0) { queueRepository.enqueue(any(), any()) }
+        verify(exactly = 0) { recommendationService.initiateRecommendationsTasks(any()) }
     }
 }
