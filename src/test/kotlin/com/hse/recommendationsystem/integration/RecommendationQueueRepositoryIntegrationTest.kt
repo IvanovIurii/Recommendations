@@ -1,7 +1,7 @@
 package com.hse.recommendationsystem.integration
 
-import com.hse.recommendationsystem.domain.model.RfqRecommendationQueueType
-import com.hse.recommendationsystem.domain.repository.RfqRecommendationsQueueRepository
+import com.hse.recommendationsystem.application.domain.model.RfqRecommendationQueueType
+import com.hse.recommendationsystem.application.domain.persistence.RfqRecommendationsQueueRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

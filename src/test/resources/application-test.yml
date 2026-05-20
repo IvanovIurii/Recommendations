@@ -14,17 +14,28 @@ spring:
 
 app:
   api-client:
-    recommendations-api:
-      url: http://localhost:${wiremock.server.port}/recommendations
+    inference-service:
+      url: http://localhost:${wiremock.server.port}
   recommendations:
     queue-processing-delay-ms: 200
     notification-processing-delay-ms: 200
     queue-batch-size: 10
     queue-max-processing-attempts: 3
+    allowed-match-types: match,weak_match
   messaging:
     enabled: true
     sns-topic-arn: arn:aws:sns:us-east-1:000000000000:supplier-recommendation-events
     cns-feedback-queue-name: cns-recommendation-feedback
+    model-sync-queue-name: model-sync-events
+  s3:
+    endpoint: http://localhost:9000
+    access-key: minioadmin
+    secret-key: minioadmin
+    region: us-east-1
+    dataset-bucket: datasets
+    model-bucket: models
+  offline:
+    enabled: false
 
 management:
   statsd:

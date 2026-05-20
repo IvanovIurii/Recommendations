@@ -17,5 +17,8 @@ awslocal sns subscribe \
   --protocol sqs \
   --notification-endpoint "$QUEUE_ARN"
 
+MODEL_SYNC_QUEUE_URL=$(awslocal sqs create-queue --queue-name model-sync-events --query QueueUrl --output text)
+
 echo "LOCALSTACK_SNS_TOPIC_ARN=$TOPIC_ARN"
 echo "LOCALSTACK_SQS_QUEUE_URL=$QUEUE_URL"
+echo "LOCALSTACK_MODEL_SYNC_QUEUE_URL=$MODEL_SYNC_QUEUE_URL"

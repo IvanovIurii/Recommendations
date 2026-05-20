@@ -16,7 +16,7 @@ services:
     ports:
       - "4566:4566"
     environment:
-      SERVICES: sns,sqs
+      SERVICES: sns,sqs,s3
       DEBUG: "0"
     volumes:
       - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh
@@ -25,3 +25,55 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9002:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/datasets &&
+      mc mb --ignore-existing local/models &&
+      echo 'MinIO buckets created: datasets, models'
+      "
+
+  inference-service:
+    build:
+      context: ./inference-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8000"
+    volumes:
+      - ./inference-service/model:/app/model
+    environment:
+      MODEL_DIR: /app/model
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      SQS_MODEL_SYNC_QUEUE: model-sync-events
+    depends_on:
+      localstack:
+        condition: service_healthy
+
+volumes:
+  minio_data:

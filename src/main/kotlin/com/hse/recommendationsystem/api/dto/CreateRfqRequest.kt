@@ -8,7 +8,7 @@ data class CreateRfqRequest(
     @field:NotBlank @field:Email
     val email: String,
     val fullName: String? = null,
-    val countryCode: String? = null, // user country code
+    val countryCode: String? = null,
     val userProfileId: UUID? = null,
     val title: String? = null,
     val description: String? = null,

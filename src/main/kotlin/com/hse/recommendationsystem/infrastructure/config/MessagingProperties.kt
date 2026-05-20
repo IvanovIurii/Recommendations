@@ -7,4 +7,5 @@ data class MessagingProperties(
     val enabled: Boolean,
     val snsTopicArn: String,
     val cnsFeedbackQueueName: String,
+    val modelSyncQueueName: String = "model-sync-events",
 )

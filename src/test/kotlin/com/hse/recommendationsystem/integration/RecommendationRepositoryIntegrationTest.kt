@@ -2,22 +2,22 @@ package com.hse.recommendationsystem.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.hse.recommendationsystem.domain.model.DecisionType
-import com.hse.recommendationsystem.domain.model.MatchType
-import com.hse.recommendationsystem.domain.model.NotificationStatus
-import com.hse.recommendationsystem.domain.model.Recommendation
-import com.hse.recommendationsystem.domain.model.RecommendationNotification
-import com.hse.recommendationsystem.domain.model.RfqCore
-import com.hse.recommendationsystem.domain.model.RfqStatus
-import com.hse.recommendationsystem.domain.model.RfqUser
-import com.hse.recommendationsystem.domain.model.SupplierDecision
-import com.hse.recommendationsystem.domain.model.SupplierProfileSnapshot
-import com.hse.recommendationsystem.domain.repository.DecisionRepository
-import com.hse.recommendationsystem.domain.repository.RecommendationNotificationRepository
-import com.hse.recommendationsystem.domain.repository.RecommendationRepository
-import com.hse.recommendationsystem.domain.repository.RfqCoreRepository
-import com.hse.recommendationsystem.domain.repository.RfqUserRepository
-import com.hse.recommendationsystem.domain.repository.SupplierProfileSnapshotRepository
+import com.hse.recommendationsystem.application.domain.model.DecisionType
+import com.hse.recommendationsystem.application.domain.model.MatchType
+import com.hse.recommendationsystem.application.domain.model.NotificationStatus
+import com.hse.recommendationsystem.application.domain.model.Recommendation
+import com.hse.recommendationsystem.application.domain.model.RecommendationNotification
+import com.hse.recommendationsystem.application.domain.model.RfqCore
+import com.hse.recommendationsystem.application.domain.model.RfqStatus
+import com.hse.recommendationsystem.application.domain.model.RfqUser
+import com.hse.recommendationsystem.application.domain.model.SupplierDecision
+import com.hse.recommendationsystem.application.domain.model.SupplierProfileSnapshot
+import com.hse.recommendationsystem.application.domain.persistence.DecisionRepository
+import com.hse.recommendationsystem.application.domain.persistence.RecommendationNotificationRepository
+import com.hse.recommendationsystem.application.domain.persistence.RecommendationRepository
+import com.hse.recommendationsystem.application.domain.persistence.RfqCoreRepository
+import com.hse.recommendationsystem.application.domain.persistence.RfqUserRepository
+import com.hse.recommendationsystem.application.domain.persistence.SupplierProfileSnapshotRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,17 +57,16 @@ class RecommendationRepositoryIntegrationTest {
     @Test
     fun `recommendation snapshot decision and notification round trip`() {
         val now = Instant.parse("2025-02-01T12:00:00Z")
-        val user =
-            rfqUserRepository.save(
-                RfqUser(
-                    userProfileId = null,
-                    email = "buyer@example.com",
-                    fullName = "B",
-                    countryCode = "DE",
-                    createdAt = now,
-                    updatedAt = now,
-                ),
-            )
+        val user = rfqUserRepository.save(
+            RfqUser(
+                userProfileId = null,
+                email = "buyer@example.com",
+                fullName = "B",
+                countryCode = "DE",
+                createdAt = now,
+                updatedAt = now,
+            ),
+        )
         val rfqId = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc")
         rfqCoreRepository.save(
             RfqCore(
@@ -86,10 +85,7 @@ class RecommendationRepositoryIntegrationTest {
             ),
         )
         val supplierId = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd")
-        val raw: ObjectNode =
-            objectMapper.createObjectNode().apply {
-                put("k", "v")
-            }
+        val raw: ObjectNode = objectMapper.createObjectNode().apply { put("k", "v") }
         recommendationRepository.save(
             Recommendation(
                 rfqId = rfqId,
@@ -154,17 +150,16 @@ class RecommendationRepositoryIntegrationTest {
     @Test
     fun `deleteAllDataForRfq removes dependent rows`() {
         val now = Instant.parse("2025-03-01T08:00:00Z")
-        val user =
-            rfqUserRepository.save(
-                RfqUser(
-                    userProfileId = null,
-                    email = "x@example.com",
-                    fullName = "X",
-                    countryCode = "DE",
-                    createdAt = now,
-                    updatedAt = now,
-                ),
-            )
+        val user = rfqUserRepository.save(
+            RfqUser(
+                userProfileId = null,
+                email = "x@example.com",
+                fullName = "X",
+                countryCode = "DE",
+                createdAt = now,
+                updatedAt = now,
+            ),
+        )
         val rfqId = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee")
         rfqCoreRepository.save(
             RfqCore(

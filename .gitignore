@@ -8,3 +8,8 @@ out/
 /localstack/cache/
 build
 bin/
+
+# Inference service model weights (too large for git)
+inference-service/model/*.safetensors
+inference-service/model/*.bin
+inference-service/model/tokenizer.json

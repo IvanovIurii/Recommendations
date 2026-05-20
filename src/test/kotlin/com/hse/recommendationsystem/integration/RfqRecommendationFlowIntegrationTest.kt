@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.hse.recommendationsystem.api.dto.CreateRfqRequest
-import com.hse.recommendationsystem.domain.model.RfqStatus
+import com.hse.recommendationsystem.application.domain.model.RfqStatus
 import com.hse.recommendationsystem.testconfigs.Fixtures
 import com.hse.recommendationsystem.testconfigs.WiremockStubs
 import org.assertj.core.api.Assertions.assertThat
@@ -23,10 +23,6 @@ import org.springframework.web.client.RestClient
 import java.time.Duration
 import java.util.UUID
 
-/**
- * Postgres + LocalStack (docker-compose) + WireMock (recommendations HTTP API).
- * Single Spring context for end-to-end flows to avoid flaky restarts between tests.
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @AutoConfigureWireMock(port = 0)
@@ -58,14 +54,13 @@ class RfqRecommendationFlowIntegrationTest {
         val base = "/api/v1/rfq"
         val createBody = Fixtures.getCreateRfqRequest()
 
-        val createJson =
-            restClient
-                .post()
-                .uri(base)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(objectMapper.writeValueAsString(createBody))
-                .retrieve()
-                .body(String::class.java)!!
+        val createJson = restClient
+            .post()
+            .uri(base)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(objectMapper.writeValueAsString(createBody))
+            .retrieve()
+            .body(String::class.java)!!
         val createMap = objectMapper.readValue(createJson, object : TypeReference<Map<String, Any>>() {})
         val rfqId = UUID.fromString(createMap["rfqId"] as String)
 
@@ -76,12 +71,11 @@ class RfqRecommendationFlowIntegrationTest {
             .toBodilessEntity()
 
         await().atMost(Duration.ofSeconds(90)).pollInterval(Duration.ofMillis(200)).until {
-            val getJson =
-                restClient
-                    .get()
-                    .uri("$base/$rfqId")
-                    .retrieve()
-                    .body(String::class.java)!!
+            val getJson = restClient
+                .get()
+                .uri("$base/$rfqId")
+                .retrieve()
+                .body(String::class.java)!!
             val getMap = objectMapper.readValue(getJson, object : TypeReference<Map<String, Any>>() {})
             getMap["status"] == RfqStatus.PROCESSED.name
         }
@@ -90,12 +84,11 @@ class RfqRecommendationFlowIntegrationTest {
             countSentNotifications(rfqId) == 8
         }
 
-        val recJson =
-            restClient
-                .get()
-                .uri("$base/$rfqId/recommendations?page=0&pageSize=50")
-                .retrieve()
-                .body(String::class.java)!!
+        val recJson = restClient
+            .get()
+            .uri("$base/$rfqId/recommendations?page=0&pageSize=50")
+            .retrieve()
+            .body(String::class.java)!!
         val recBody = objectMapper.readValue(recJson, object : TypeReference<Map<String, Any>>() {})
         assertThat((recBody["total"] as Number).toInt()).isEqualTo(8)
 
@@ -108,12 +101,11 @@ class RfqRecommendationFlowIntegrationTest {
             .retrieve()
             .toBodilessEntity()
 
-        val afterJson =
-            restClient
-                .get()
-                .uri("$base/$rfqId/recommendations?page=0&pageSize=50")
-                .retrieve()
-                .body(String::class.java)!!
+        val afterJson = restClient
+            .get()
+            .uri("$base/$rfqId/recommendations?page=0&pageSize=50")
+            .retrieve()
+            .body(String::class.java)!!
         val afterBody = objectMapper.readValue(afterJson, object : TypeReference<Map<String, Any>>() {})
         @Suppress("UNCHECKED_CAST")
         val list = afterBody["result"] as List<Map<String, Any>>
@@ -126,28 +118,26 @@ class RfqRecommendationFlowIntegrationTest {
         val restClient = restClientBuilder.baseUrl("http://localhost:$port").build()
         val base = "/api/v1/rfq"
 
-        val createBody =
-            CreateRfqRequest(
-                email = "messaging-flow@example.com",
-                fullName = "Buyer",
-                countryCode = "DE",
-                userProfileId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                title = "Parts",
-                description = "Need parts",
-                deliveryLocation = "Berlin",
-                quantity = "10",
-                supplierTypes = listOf("Manufacturer"),
-                buyerCountry = "DE",
-                categoryId = 1L,
-            )
-        val createJson =
-            restClient
-                .post()
-                .uri(base)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(objectMapper.writeValueAsString(createBody))
-                .retrieve()
-                .body(String::class.java)!!
+        val createBody = CreateRfqRequest(
+            email = "messaging-flow@example.com",
+            fullName = "Buyer",
+            countryCode = "DE",
+            userProfileId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+            title = "Parts",
+            description = "Need parts",
+            deliveryLocation = "Berlin",
+            quantity = "10",
+            supplierTypes = listOf("Manufacturer"),
+            buyerCountry = "DE",
+            categoryId = 1L,
+        )
+        val createJson = restClient
+            .post()
+            .uri(base)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(objectMapper.writeValueAsString(createBody))
+            .retrieve()
+            .body(String::class.java)!!
         val createMap = objectMapper.readValue(createJson, object : TypeReference<Map<String, Any>>() {})
         val rfqId = UUID.fromString(createMap["rfqId"] as String)
 
@@ -158,12 +148,11 @@ class RfqRecommendationFlowIntegrationTest {
             .toBodilessEntity()
 
         await().atMost(Duration.ofSeconds(90)).pollInterval(Duration.ofMillis(300)).until {
-            val getJson =
-                restClient
-                    .get()
-                    .uri("$base/$rfqId")
-                    .retrieve()
-                    .body(String::class.java)!!
+            val getJson = restClient
+                .get()
+                .uri("$base/$rfqId")
+                .retrieve()
+                .body(String::class.java)!!
             val getMap = objectMapper.readValue(getJson, object : TypeReference<Map<String, Any>>() {})
             getMap["status"] == RfqStatus.PROCESSED.name
         }
@@ -181,15 +170,14 @@ class RfqRecommendationFlowIntegrationTest {
             .retrieve()
             .toBodilessEntity()
 
-        val decisionCount =
-            jdbcTemplate.queryForObject(
-                """
-                SELECT count(*) FROM decision WHERE rfq_id = ?::uuid AND supplier_id = ?::uuid
-                """.trimIndent(),
-                Int::class.java,
-                rfqId.toString(),
-                supplierId.toString(),
-            ) ?: 0
+        val decisionCount = jdbcTemplate.queryForObject(
+            """
+            SELECT count(*) FROM decision WHERE rfq_id = ?::uuid AND supplier_id = ?::uuid
+            """.trimIndent(),
+            Int::class.java,
+            rfqId.toString(),
+            supplierId.toString(),
+        ) ?: 0
         assertThat(decisionCount).isEqualTo(1)
     }
 

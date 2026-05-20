@@ -31,7 +31,7 @@ dependencyManagement {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     implementation("org.postgresql:postgresql")
@@ -47,6 +47,9 @@ dependencies {
     implementation("io.awspring.cloud:spring-cloud-aws-autoconfigure:3.4.2")
     implementation("io.awspring.cloud:spring-cloud-aws-starter-sns:3.4.2")
     implementation("io.awspring.cloud:spring-cloud-aws-starter-sqs:3.4.2")
+
+    implementation("software.amazon.awssdk:s3")
+    implementation("software.amazon.awssdk:sts")
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

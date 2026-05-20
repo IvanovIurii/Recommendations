@@ -7,6 +7,6 @@ data class RecommendationsProperties(
     val queueProcessingDelayMs: Long = 1000,
     val queueBatchSize: Int = 10,
     val queueMaxProcessingAttempts: Int = 3,
-    /** Delay between batch SNS publishes for ON_WAIT notifications. */
     val notificationProcessingDelayMs: Long = 60_000,
+    val allowedMatchTypes: List<String> = listOf("match", "weak_match"),
 )

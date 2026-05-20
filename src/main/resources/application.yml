@@ -3,11 +3,12 @@ spring:
     name: recommendation-system
   cloud:
     aws:
+      endpoint: ${AWS_ENDPOINT:http://localhost:4566}
       region:
         static: us-east-1
       credentials:
-        access-key: test
-        secret-key: test
+        access-key: ${AWS_ACCESS_KEY_ID:test}
+        secret-key: ${AWS_SECRET_ACCESS_KEY:test}
       sns:
         enabled: true
       sqs:
@@ -26,17 +27,29 @@ server:
 
 app:
   api-client:
-    recommendations-api:
-      url: ${RECOMMENDATIONS_API_URL:http://localhost:8081/recommendations}
+    inference-service:
+      url: ${INFERENCE_SERVICE_URL:http://localhost:8081}
   recommendations:
     queue-processing-delay-ms: 1000
     queue-batch-size: 10
     queue-max-processing-attempts: 3
     notification-processing-delay-ms: 60000
+    allowed-match-types: match,weak_match
   messaging:
     enabled: true
     sns-topic-arn: ${SNS_TOPIC_ARN:arn:aws:sns:us-east-1:000000000000:supplier-recommendation-events}
-    cns-feedback-queue-name: cns-feedback-queue
+    cns-feedback-queue-name: cns-recommendation-feedback
+    model-sync-queue-name: model-sync-events
+  s3:
+    endpoint: ${S3_ENDPOINT:http://localhost:9002}
+    access-key: ${S3_ACCESS_KEY:minioadmin}
+    secret-key: ${S3_SECRET_KEY:minioadmin}
+    region: ${S3_REGION:us-east-1}
+    dataset-bucket: datasets
+    model-bucket: models
+  offline:
+    enabled: true
+    schedule-delay-ms: 300000
 
 springdoc:
   api-docs:

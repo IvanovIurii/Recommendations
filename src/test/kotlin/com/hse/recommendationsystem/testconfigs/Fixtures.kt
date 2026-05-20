@@ -1,9 +1,9 @@
 package com.hse.recommendationsystem.testconfigs
 
 import com.hse.recommendationsystem.api.dto.CreateRfqRequest
-import com.hse.recommendationsystem.domain.model.RfqCore
-import com.hse.recommendationsystem.domain.model.RfqStatus
-import com.hse.recommendationsystem.domain.model.RfqUser
+import com.hse.recommendationsystem.application.domain.model.RfqCore
+import com.hse.recommendationsystem.application.domain.model.RfqStatus
+import com.hse.recommendationsystem.application.domain.model.RfqUser
 import java.time.Instant
 import java.util.UUID
 
@@ -15,16 +15,15 @@ class Fixtures {
             fullName: String = "Test User",
             countryCode: String = "DE",
             createdAt: Instant = Instant.parse("2025-01-15T10:00:00Z"),
-        ): RfqUser =
-            RfqUser(
-                rfqUserId = null,
-                userProfileId = userProfileId,
-                email = email,
-                fullName = fullName,
-                countryCode = countryCode,
-                createdAt = createdAt,
-                updatedAt = createdAt,
-            )
+        ): RfqUser = RfqUser(
+            rfqUserId = null,
+            userProfileId = userProfileId,
+            email = email,
+            fullName = fullName,
+            countryCode = countryCode,
+            createdAt = createdAt,
+            updatedAt = createdAt,
+        )
 
         fun getRfqCore(
             rfqId: UUID = UUID.fromString("cafe0000-0000-4000-8000-000000000001"),
@@ -38,21 +37,20 @@ class Fixtures {
             buyerCountry: String? = "DE",
             categoryId: Long? = 1L,
             createdAt: Instant = Instant.parse("2025-01-15T10:00:00Z"),
-        ): RfqCore =
-            RfqCore(
-                rfqId = rfqId,
-                senderId = senderId,
-                title = title,
-                description = description,
-                deliveryLocation = deliveryLocation,
-                quantity = quantity,
-                supplierTypes = supplierTypes,
-                status = status,
-                buyerCountry = buyerCountry,
-                categoryId = categoryId,
-                createdAt = createdAt,
-                updatedAt = createdAt,
-            )
+        ): RfqCore = RfqCore(
+            rfqId = rfqId,
+            senderId = senderId,
+            title = title,
+            description = description,
+            deliveryLocation = deliveryLocation,
+            quantity = quantity,
+            supplierTypes = supplierTypes,
+            status = status,
+            buyerCountry = buyerCountry,
+            categoryId = categoryId,
+            createdAt = createdAt,
+            updatedAt = createdAt,
+        )
 
         fun getCreateRfqRequest(
             email: String = "flow@example.com",
@@ -66,19 +64,18 @@ class Fixtures {
             supplierTypes: List<String> = listOf("Manufacturer"),
             buyerCountry: String = "DE",
             categoryId: Long = 99L,
-        ): CreateRfqRequest =
-            CreateRfqRequest(
-                email = email,
-                fullName = fullName,
-                countryCode = countryCode,
-                userProfileId = userProfileId,
-                title = title,
-                description = description,
-                deliveryLocation = deliveryLocation,
-                quantity = quantity,
-                supplierTypes = supplierTypes,
-                buyerCountry = buyerCountry,
-                categoryId = categoryId,
-            )
+        ): CreateRfqRequest = CreateRfqRequest(
+            email = email,
+            fullName = fullName,
+            countryCode = countryCode,
+            userProfileId = userProfileId,
+            title = title,
+            description = description,
+            deliveryLocation = deliveryLocation,
+            quantity = quantity,
+            supplierTypes = supplierTypes,
+            buyerCountry = buyerCountry,
+            categoryId = categoryId,
+        )
     }
 }
